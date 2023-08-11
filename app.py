@@ -1,7 +1,8 @@
 from flask import Flask, request
 from flask_cors import CORS
 from datetime import datetime
-import os, base64, random, time
+import os, base64, random, time, json
+import numpy as np
 import torch, cv2, openai
 from skimage.measure import label, regionprops
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
@@ -12,7 +13,7 @@ from ovseg.open_vocab_seg import add_ovseg_config
 from ovseg.open_vocab_seg.utils import VisualizationDemo
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-openai.api_key = "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"
+openai.api_key = "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"
 blipprocessor = None
 blipmodel = None
 ovsegPredictor = None
@@ -131,9 +132,9 @@ def register_new_image():
             presence_penalty=0
         )
         res = response.choices[0].message.content
-        objects = res.split('\n\n')[0].split(': ')[1].split(', ')
-        actions = res.split('\n\n')[1].split(': ')[1].split(', ')
-        concepts = res.split('\n\n')[2].split(': ')[1].split(', ')
+        objects = res.split('\n\n')[0].split(': ')[1].strip('.').split(', ')
+        actions = res.split('\n\n')[1].split(': ')[1].strip('.').split(', ')
+        concepts = res.split('\n\n')[2].split(': ')[1].strip('.').split(', ')
         
         return objects, actions, concepts
     
@@ -167,6 +168,8 @@ def register_new_image():
             area = prop.area
             if area > 0.001 * image_rgb.shape[0]*image_rgb.shape[1]:
                 ymin, xmin, ymax, xmax = prop.bbox
+                mask = np.zeros((image_rgb.shape[0], image_rgb.shape[1]))
+                mask[ymin:ymax, xmin:xmax] = prop.image
                 keywords.append({
                     "type": "object", 
                     "keyword": objects[i]+"-"+str(j+1),
@@ -174,7 +177,7 @@ def register_new_image():
                         "x": ((xmin+xmax) / 2)  / image_rgb.shape[1],
                         "y": ((ymin+ymax) / 2)  / image_rgb.shape[0]
                     },
-                    "mask": prop.image.tolist(),
+                    "mask": mask.tolist(),
                     "bbox": prop.bbox
                 })
     
@@ -182,22 +185,101 @@ def register_new_image():
         keywords.append({
             "type": "action", 
             "keyword": act, 
-            "position": {
-                "x": random.random(), 
-                "y": random.random()
-            }
+            "position": None
         })
     for con in concepts:
         keywords.append({
             "type": "concept", 
             "keyword": con, 
-            "position": {
-                "x": random.random(), 
-                "y": random.random()
-            }
+            "position": None
         })
 
     return {'filename': filename, 'keywords': keywords}, 200
+
+@app.route('/imageElement/sendElement', methods=['POST'])
+def element_merge():
+    # if request.method == 'OPTIONS':
+    #     return '', 200
+    
+    data = request.get_json()
+    elements = data.get('elements')['elements']
+    
+    # f = open("dummydata.json", "r")
+    # elements = json.loads(f.read())['elements']
+    # f.close()
+    
+    objects = []
+    actions = []
+    concepts = []
+    
+    for e in elements:
+        if e["type"] == "object":
+            objects.append(e)
+        elif e["type"] == "action":
+            actions.append(e)
+        elif e["type"] == "concept":
+            concepts.append(e)
+    
+    elementlist = "Object: " + ", ".join([o["keyword"].split("-")[0] for o in objects]) + "\nAction: " + ", ".join([a["keyword"] for a in actions]) + "\nConcept: " + ", ".join([c["keyword"] for c in concepts])
+
+    def get_gpt_response(elementlist):
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {
+                "role": "system",
+                "content": "The user wants to draw an illustration, with the assistance of you. You will be provided with multiple keywords users wanted to include in their illustrations. There are three types of keywords: object, action, and concepts.\n\nObjects are words about the specific physical objects that the user wants to include in their illustration.\n\nAction is about the action that the character or animal in the illustration performs.\n\nConcepts are words not found in the illustration directly, but can potentially convey the overall mood or topic of the illustration.\n\nYour task is to generate three descriptions of the illustration that the user can draw based on the given keywords. Each description should be in two concise lines, one for the background, and one for the scene."
+                },
+                {
+                "role": "user",
+                "content": "Object: ball, cat, dog\nAction: jumping\nConcept: playful, peaceful"
+                },
+                {
+                "role": "assistant",
+                "content": "Background: A sunny park with lush green grass and colorful flowers.\nScene: A playful cat and a joyful dog chasing a bouncing ball together.\n\nBackground: A cozy living room with a warm fireplace and comfortable furniture.\nScene: A peaceful cat gracefully leaping through the air, while a playful dog jumps energetically after a bouncing ball.\n\nBackground: A serene beach with soft sand, sparkling blue waves, and seashells scattered along the shore.\nScene: A carefree cat and an exuberant dog leaping in sync, as they joyfully jump after a ball rolling on the sandy beach."
+                },
+                {
+                "role": "user",
+                "content": "Object: sofa, air balloon, projector\nAction: relaxing\nConcept: skeptical"
+                },
+                {
+                "role": "assistant",
+                "content": "Background: A softly lit, intriguing living room, with old mystery books scattered across wooden shelves. \nScene: On the comfy sofa, a skeptical person relaxes, gazing at the ghostly silhouette of an air balloon projected onto the wall. \n\nBackground: A spacious, cozy attic with vintage decorations and star-themed wallpaper.\nScene: A person, donned in relaxed loungewear, sits skeptically on a plush sofa, observing a projected air balloon mysteriously floating on the ceiling.\n\nBackground: A circular room adorned with astronomical murals and whimsical twinkling lights for a starry effect. \nScene: A dubious figure lounges restfully on an antique sofa, eyes following the floating journey of a projected air balloon around the room."
+                },
+                {
+                "role": "user",
+                "content": "Object: bar graph, cell phone, grad student\nAction: researching\nConcept: sad"
+                },
+                {
+                "role": "assistant",
+                "content": "Background: A cluttered grad school dorm room filled with textbooks, sticky notes, and mug-full of half-drunk coffee. \nScene: A tired grad student sits slumped over, sadly researching on their cell phone, with a bar graph displayed despairingly on their cracked screen.\n\nBackground: A dimly lit, silent library corner with towering bookshelves all around.\nScene: A disheartened grad student is hunched over a bar graph, meticulously researching data on their cell phone with an air of melancholy.\n\nBackground: A quiet study room, where the fading sunset casts long, forlorn shadows. \nScene: A downcast grad student deeply engrossed in researching, sadly staring at a bar graph displayed on their cellphone screen."
+                },
+                {
+                "role": "user",
+                "content": elementlist
+                }
+            ],
+            temperature=1,
+            max_tokens=256,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+        res = []
+        for r in response.choices[0].message.content.split('\n\n'):
+            background, scene = r.split('\n')
+            background = background.strip(' ').split(': ')[1]
+            scene = scene.strip(' ').split(': ')[1]
+            res.append({
+                "background": background,
+                "scene": scene
+            })
+        return res
+    
+    print("Getting GPT response")
+    res = get_gpt_response(elementlist)
+
+    return {"descriptions": res}, 200
 
 
 if __name__ == "__main__":
