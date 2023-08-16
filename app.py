@@ -12,6 +12,11 @@ from detectron2.data.detection_utils import read_image
 from ovseg.open_vocab_seg import add_ovseg_config
 from ovseg.open_vocab_seg.utils import VisualizationDemo
 
+from llm_grounded_diffusion.run import recombination
+from style_module.style_transfer import line_drawing_predict
+from layout_module.layout_generation import sample_bboxes_gen
+from layout_module.layout_metrics import cal_layout_sim
+
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 openai.api_key = "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"
 blipprocessor = None
@@ -405,13 +410,33 @@ def generate_descriptions_from_elements():
 
     return {"descriptions": res}, 200
 
+@app.route('/listLayouts', methods=['POST'])
+def recommend_layouts(old_layout):
+    recomms = []
+
+    # all sample layouts are xyxy format.
+    for sample_layout in sample_bboxes_gen():
+        sim = cal_layout_sim(old_layout, sample_layout)
+        recomms.append([sim, sample_layout])
+    
+    highrecomms = sorted(lambda x:x[0], recomms)[:10]
+
+    return list(map(lambda x: x[1], highrecomms))
+
+
 @app.route('/getImages', methods=['POST'])
 def generate_recombined_images():
+    image_path = "generated/" + "test.png"
+
     data = request.get_json()
     data = data.get('data')
     print(data)
     
-    image_path = "generated/" + "test.png"
+    # output type is pil
+    output = recombination(prompt=data)
+    output = line_drawing_predict(output, ver='Simple Lines')
+    output.save(image_path)
+
     return send_file(image_path, mimetype='image/png')
 
 if __name__ == "__main__":
