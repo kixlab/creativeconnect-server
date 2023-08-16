@@ -6,9 +6,6 @@ import numpy as np
 import torch, cv2, openai
 from skimage.measure import label, regionprops
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
-from detectron2.config import get_cfg
-from detectron2.projects.deeplab import add_deeplab_config
-from detectron2.data.detection_utils import read_image
 
 from llm_grounded_diffusion.run import recombination
 from style_module.style_transfer import line_drawing_predict
@@ -41,19 +38,6 @@ def setup_2():
         "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16
     ).to(DEVICE)
     
-    # Setup OVSeg model
-    CONFIG_FILE = "../ovseg/configs/ovseg_swinB_vitL_demo.yaml"
-    OPTS = ['MODEL.WEIGHTS', '../ovseg/checkpoints/ovseg_swinbase_vitL14_ft_mpt.pth']
-    def setup_cfg():
-        # load config from file and command-line arguments
-        cfg = get_cfg()
-        # for poly lr schedule
-        add_deeplab_config(cfg)
-        cfg.merge_from_file(CONFIG_FILE)
-        cfg.merge_from_list(OPTS)
-        cfg.freeze()
-        return cfg
-    cfg = setup_cfg()
     return 'setup done'
 
 @app.route("/setup", methods=['GET'])
@@ -408,6 +392,12 @@ def generate_descriptions_from_elements():
 
 @app.route('/listLayouts', methods=['POST'])
 def recommend_layouts():
+    '''
+        recommend_layouts: Recommend most similar layout list to given
+
+        old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] each tuple is single xywh formatted bounding box 
+        return => List contained 10 xywh formatted layout
+    '''
     data = request.get_json()
     old_layout = data.get('layout')
     recomms = []
@@ -416,13 +406,22 @@ def recommend_layouts():
         sim = cal_layout_sim(old_layout, sample_layout)
         recomms.append([sim, sample_layout])
     
-    highrecomms = sorted(lambda x:x[0], recomms)[:10]
+    highrecomms = sorted(lambda x:x[0], recomms, reverse=True)[:10]
 
     return list(map(lambda x: x[1], highrecomms))
 
 
 @app.route('/getImages', methods=['POST'])
 def generate_recombined_images():
+    '''
+        generate_recombined_images: following the given prompt, generate image and transform it to line drawing
+
+        prompt = """Caption: Gray cat and a soccer ball on the grass, line drawing.
+        Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
+        Background prompt: A grassy area."""
+
+        output => PIL
+    '''
     image_path = "generated/" + "test.png"
 
     data = request.get_json()
