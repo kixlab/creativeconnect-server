@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/sumin/creativeconnect-server/llm_grounded_diffusion/')
+
 import gradio as gr
 import numpy as np
 from PIL import Image
