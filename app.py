@@ -413,8 +413,7 @@ def generate_descriptions_from_elements():
 @app.route('/listLayouts', methods=['POST'])
 def recommend_layouts(old_layout):
     recomms = []
-
-    # all sample layouts are xyxy format.
+    # all sample layouts are xywh format.
     for sample_layout in sample_bboxes_gen():
         sim = cal_layout_sim(old_layout, sample_layout)
         recomms.append([sim, sample_layout])

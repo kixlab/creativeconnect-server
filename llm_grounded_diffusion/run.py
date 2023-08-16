@@ -120,24 +120,17 @@ def parse_input(text=None):
     
     return gen_boxes, bg_prompt
 
-def recombination():
+def recombination(prompt):
     start_time = time()
 
-    prompt = """Caption: Gray cat and a soccer ball on the grass, line drawing.
-Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
-Background prompt: A grassy area."""
+#     prompt = """Caption: Gray cat and a soccer ball on the grass, line drawing.
+# Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
+# Background prompt: A grassy area."""
 
     img = get_ours_image(response=prompt)
     output = Image.fromarray(img[0])
-    
-    # ctrl_img, masks = controlnet_run(now, verbose=True) # obj_latents_list, ctrl_img_list, boxes_list = 
-    # segments = mask_to_segment(ctrl_img, masks)
-    # output = overlay_segment(img[0], segments, masks)
 
-    print(f'Latency: {time()-start_time}')
-
-    output.save(f'{now}_res.png')
-    print(f'Saved {now}_res.png...')
+    print(f'Generation Latency: {time()-start_time}')
     
     return output
 
