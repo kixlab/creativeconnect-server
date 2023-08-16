@@ -9,8 +9,6 @@ from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from detectron2.config import get_cfg
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.data.detection_utils import read_image
-from ovseg.open_vocab_seg import add_ovseg_config
-from ovseg.open_vocab_seg.utils import VisualizationDemo
 
 from llm_grounded_diffusion.run import recombination
 from style_module.style_transfer import line_drawing_predict
@@ -51,13 +49,11 @@ def setup_2():
         cfg = get_cfg()
         # for poly lr schedule
         add_deeplab_config(cfg)
-        add_ovseg_config(cfg)
         cfg.merge_from_file(CONFIG_FILE)
         cfg.merge_from_list(OPTS)
         cfg.freeze()
         return cfg
     cfg = setup_cfg()
-    ovsegPredictor = VisualizationDemo(cfg)
     return 'setup done'
 
 @app.route("/setup", methods=['GET'])
@@ -411,7 +407,9 @@ def generate_descriptions_from_elements():
     return {"descriptions": res}, 200
 
 @app.route('/listLayouts', methods=['POST'])
-def recommend_layouts(old_layout):
+def recommend_layouts():
+    data = request.get_json()
+    old_layout = data.get('layout')
     recomms = []
     # all sample layouts are xywh format.
     for sample_layout in sample_bboxes_gen():
