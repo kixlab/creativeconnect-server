@@ -11,8 +11,7 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
 from llm_grounded_diffusion.run import recombination
 from style_module.style_transfer import line_drawing_predict
-from layout_module.layout_generation import sample_bboxes_gen
-from layout_module.layout_metrics import cal_layout_sim
+from layout_module.layout_metrics import cal_layout_sim, perturb_layout
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 openai.api_key = "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"
@@ -290,8 +289,9 @@ def recommend_layouts():
     old_layout = data.get('layout')
     print(old_layout)
     recomms = []
+    sample_layouts = [perturb_layout(old_layout, position_variation=300, size_variation=300) for _ in range(10)]
     # all sample layouts are xywh format.
-    for sample_layout in sample_bboxes_gen():
+    for sample_layout in sample_layouts:
         sim = cal_layout_sim(old_layout, sample_layout)
         recomms.append([sim, sample_layout])
     
