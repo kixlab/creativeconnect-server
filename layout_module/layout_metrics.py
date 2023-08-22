@@ -29,7 +29,7 @@ def perturb_layout(layout, position_variation=50, size_variation=50):
             y += random.randint(-position_variation, position_variation)
             w += random.randint(-size_variation, size_variation)
             h += random.randint(-size_variation, size_variation)
-            if x >=0 and y>=0 and w>=0 and h>=0:
+            if x >=0 and y>=0 and w>=50 and h>=50:
                 if x > 512: x = 512
                 if y > 512: y = 512
                 if x+w > 512: w = 512-x
