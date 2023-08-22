@@ -67,6 +67,6 @@ def sample_bboxes_gen():
     all_layouts = merge_layouts(base_layouts) + base_layouts
     all_bboxes = layout_to_bbox(all_layouts)
 
-    print(*all_bboxes, sep='\n')
+    # print(*all_bboxes, sep='\n')
     
     return all_bboxes

@@ -231,7 +231,7 @@ def cal_layout_sim(old_layout, new_layout):
     for box1, box2 in matched_pairs:
         iou = compute_iou(box1, box2)
         dis = compute_distance(box1, box2) / diagnoal
-        res += alpha * iou + beta * (1-dis)
+        sim += alpha * iou + beta * (1-dis)
     sim /= len(matched_pairs)
 
     return sim
@@ -274,5 +274,5 @@ if __name__ == '__main__':
         cos_sim += bbox_similarity(box1, box2)
     cos_sim /= len(matched_pairs)
 
-    print(bboxes_xyxy)
+    # print(bboxes_xyxy)
     print(f'Result | IOU+Distance Similarity:{res:.4f} Cosine Similarity: {cos_sim:.4f}')

@@ -295,7 +295,7 @@ def recommend_layouts():
         sim = cal_layout_sim(old_layout, sample_layout)
         recomms.append([sim, sample_layout])
     
-    highrecomms = sorted(lambda x:x[0], recomms, reverse=True)[:10]
+    highrecomms = sorted(recomms, key=lambda x:x[0], reverse=True)[:10]
 
     return list(map(lambda x: x[1], highrecomms))
 
@@ -376,7 +376,11 @@ def generate_elements_from_elements():
             presence_penalty=0
         )
         res = []
-        for r in response.choices[0].message.content.split('\n\n'):
+        response_content = response.choices[0].message.content
+        response_content = response_content.replace("Action & Pose", "Action & pose")
+        response_content = response_content.replace("Theme & Mood", "Theme & mood")
+        
+        for r in response_content.split('\n\n'):
             lines = r.split('\n')
             elementType = lines[0].split(':')[0]
             for line in lines[1:]:
