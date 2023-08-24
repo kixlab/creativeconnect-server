@@ -285,14 +285,15 @@ def recommend_layouts():
         old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] each tuple is single xywh formatted bounding box
         return of generate_layout = List contained 10 xywh formatted layouts. It is sorted by similarity compared with old layout
         return => List containing lists of layouts generated based on the target bbox number
-        e.g. recommends[0] contains List of generated layouts which contains 1 bbox; 
     '''
     data = request.get_json()
     old_layout = data.get('layout')
     print(old_layout)
     recommends = []
-    for i in range(1, len(old_layout)+1):
-        recommends.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=i))
+    # for i in range(1, len(old_layout)+1):
+    #     recommends.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=i))
+    target_bbox_num = data.get('target_bbox_num')
+    recommends.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=target_bbox_num))
 
     return recommends
 

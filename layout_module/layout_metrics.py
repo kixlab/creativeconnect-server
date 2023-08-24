@@ -243,6 +243,8 @@ def generate_layouts(old_layout, recommends_num=10, target_bbox_num=5, position_
         old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] each tuple is single xywh formatted bounding box
         return => List contained 10 xywh formatted layout
     '''
+    if target_bbox_num > len(old_layout):
+        raise ValueError('Target bbox number cannot be bigger than number of bboxes of the old layout')
     recomms = []
     sample_layouts = [perturb_layout(old_layout, target_bbox_num=target_bbox_num, position_variation=position_variation, size_variation=size_variation) for _ in range(recommends_num)]
     # all sample layouts are xywh format.
