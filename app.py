@@ -12,7 +12,7 @@ from gpt_prompts import (
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 from llm_grounded_diffusion.run import recombination
 from style_module.style_transfer import line_drawing_predict
-from layout_module.layout_metrics import cal_layout_sim, perturb_layout
+from layout_module.layout_metrics import generate_layouts
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -238,26 +238,21 @@ def extract_layout_from_image():
 def recommend_layouts():
     """
     Input:
-        - layout: list of bounding boxes
+        - layout: list of xywh format bounding boxes
 
     Output:
-        - layouts: list of 10 recommended layouts
+        - layouts: 2-dim list of 10 recommended layouts
     """
+    
     data = request.get_json()
     old_layout = data.get("layout")
     print(old_layout)
-    recomms = []
-    sample_layouts = [
-        perturb_layout(old_layout, position_variation=300, size_variation=300)
-        for _ in range(10)
-    ]
-    # all sample layouts are xywh format.
-    for sample_layout in sample_layouts:
-        sim = cal_layout_sim(old_layout, sample_layout)
-        recomms.append([sim, sample_layout])
-
-    highrecomms = sorted(recomms, key=lambda x: x[0], reverse=True)[:10]
-    layouts = list(map(lambda x: x[1], highrecomms))
+    
+    layouts = []
+    # for i in range(1, len(old_layout)+1):
+    #     layouts.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=i))
+    target_bbox_num = data.get('target_bbox_num')
+    layouts.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=target_bbox_num))
 
     return {"layouts": layouts}, 200
 
