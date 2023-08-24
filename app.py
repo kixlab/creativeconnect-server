@@ -11,7 +11,7 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
 from llm_grounded_diffusion.run import recombination
 from style_module.style_transfer import line_drawing_predict
-from layout_module.layout_metrics import cal_layout_sim, perturb_layout
+from layout_module.layout_metrics import generate_layouts
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 openai.api_key = "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"
@@ -283,21 +283,18 @@ def recommend_layouts():
         recommend_layouts: Recommend most similar layout list to given
 
         old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] each tuple is single xywh formatted bounding box
-        return => List contained 10 xywh formatted layout
+        return of generate_layout = List contained 10 xywh formatted layouts. It is sorted by similarity compared with old layout
+        return => List containing lists of layouts generated based on the target bbox number
+        e.g. recommends[0] contains List of generated layouts which contains 1 bbox; 
     '''
     data = request.get_json()
     old_layout = data.get('layout')
     print(old_layout)
-    recomms = []
-    sample_layouts = [perturb_layout(old_layout, position_variation=300, size_variation=300) for _ in range(10)]
-    # all sample layouts are xywh format.
-    for sample_layout in sample_layouts:
-        sim = cal_layout_sim(old_layout, sample_layout)
-        recomms.append([sim, sample_layout])
-    
-    highrecomms = sorted(recomms, key=lambda x:x[0], reverse=True)[:10]
+    recommends = []
+    for i in range(1, len(old_layout)+1):
+        recommends.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=i))
 
-    return list(map(lambda x: x[1], highrecomms))
+    return recommends
 
 @app.route('/getImage', methods=['POST'])
 def generate_recombined_images():

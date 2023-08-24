@@ -7,7 +7,7 @@ from matplotlib.collections import PatchCollection
 from skimage.feature import hog
 from skimage import color, io
 
-def perturb_layout(layout, position_variation=50, size_variation=50):
+def perturb_layout(layout, target_bbox_num=5, position_variation=50, size_variation=50):
     """
     Apply slight variations to a layout while maintaining its similarity.
 
@@ -20,23 +20,23 @@ def perturb_layout(layout, position_variation=50, size_variation=50):
     - New layout with perturbations.
     """
     new_layout = []
-
+    if len(layout) > target_bbox_num:
+        rand_idx = random.sample(range(1, len(layout)), target_bbox_num)
+        layout = [layout[i] for i in rand_idx]
     for bbox in layout:
-        while True:
-            x, y, w, h = bbox
-            # Apply random variations
-            x += random.randint(-position_variation, position_variation)
-            y += random.randint(-position_variation, position_variation)
-            w += random.randint(-size_variation, size_variation)
-            h += random.randint(-size_variation, size_variation)
-            if x >=0 and y>=0 and w>=50 and h>=50:
-                if x > 512: x = 512
-                if y > 512: y = 512
-                if x+w > 512: w = 512-x
-                if y+h > 512: h = 512-y
-                new_layout.append((x, y, w, h))
-                break
-
+        x, y, w, h = bbox
+        # Apply random variations
+        x += random.randint(-position_variation, position_variation) if x-position_variation >= 0 else random.randint(0, position_variation)
+        y += random.randint(-position_variation, position_variation) if y-position_variation >= 0 else random.randint(0, position_variation)
+        w += random.randint(-size_variation, size_variation) if w-size_variation >= 50 else random.randint(50, size_variation)
+        h += random.randint(-size_variation, size_variation) if h-size_variation >= 50 else random.randint(50, size_variation)
+        if x >=0 and y>=0 and w>=50 and h>=50:
+            if x > 512: x = 512
+            if y > 512: y = 512
+            if x+w > 512: w = 512-x
+            if y+h > 512: h = 512-y
+            new_layout.append((x, y, w, h))
+            
     return new_layout
 
 # IoU + Distance
@@ -236,43 +236,20 @@ def cal_layout_sim(old_layout, new_layout):
 
     return sim
 
-# Example
-if __name__ == '__main__':
+def generate_layouts(old_layout, recommends_num=10, target_bbox_num=5, position_variation=50, size_variation=50):
+    '''
+        recommend_layouts: Recommend most similar layout list to given
 
-    old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] # [(0, 184, 53, 90),(0, 171, 171, 191)]
-    new_layout = perturb_layout(old_layout, position_variation=300, size_variation=300)
-    bboxes_xywh = [old_layout, new_layout]
-    bboxes_xyxy = [] # [x1, y1, x2, y2]
-    gt_arr = 0
-    pred_arr = 0
-
-    for key, b in zip(['src', 'dst'], bboxes_xywh):
-        layout_image, bbox_coord = get_layout_image(b)
-        bboxes_xyxy.append(bbox_coord)
-        if key=='src': gt_arr = layout_image
-        else: pred_arr = layout_image
+        old_layout = [(60, 143, 100, 126),(265, 193, 190, 210)] each tuple is single xywh formatted bounding box
+        return => List contained 10 xywh formatted layout
+    '''
+    recomms = []
+    sample_layouts = [perturb_layout(old_layout, target_bbox_num=target_bbox_num, position_variation=position_variation, size_variation=size_variation) for _ in range(recommends_num)]
+    # all sample layouts are xywh format.
+    for sample_layout in sample_layouts:
+        sim = cal_layout_sim(old_layout, sample_layout)
+        recomms.append([sim, sample_layout])
     
-    cv2.imwrite(f'layouts.png', np.hstack((gt_arr, pred_arr)))
+    highrecomms = sorted(recomms, key=lambda x:x[0], reverse=True)
 
-    # # HOG
-    # image_path1 = 'layout_src.png'
-    # image_path2 = 'layout_dst.png'
-    # hog_sim = hog_similarity(image_path1, image_path2)
-    
-    # IoU + Distance
-    res = 0
-    matched_pairs = match_boxes(bboxes_xyxy[0], bboxes_xyxy[1])
-    for box1, box2 in matched_pairs:
-        iou = compute_iou(box1, box2)
-        dis = compute_distance(box1, box2) / diagnoal
-        res += alpha * iou + beta * (1-dis)
-    res /= len(matched_pairs)
-
-    # Cosine
-    cos_sim = 0
-    for box1, box2 in matched_pairs:
-        cos_sim += bbox_similarity(box1, box2)
-    cos_sim /= len(matched_pairs)
-
-    # print(bboxes_xyxy)
-    print(f'Result | IOU+Distance Similarity:{res:.4f} Cosine Similarity: {cos_sim:.4f}')
+    return list(map(lambda x: x[1], highrecomms))
