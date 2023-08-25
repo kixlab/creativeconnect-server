@@ -21,7 +21,8 @@ coloredlogs==15.0.1
 contourpy==1.1.0
 controlnet-aux @ git+https://github.com/patrickvonplaten/controlnet_aux@1e6bdc07c88d0358ae3c84862adb043ffd30c27c
 cycler==0.11.0
-diffusers==0.17.0
+detectron2 @ git+https://github.com/facebookresearch/detectron2.git@7d2e68dbe452fc422268d40ac185ea2609affca8
+diffusers==0.20.0
 easydict==1.10
 einops==0.6.1
 exceptiongroup==1.1.2

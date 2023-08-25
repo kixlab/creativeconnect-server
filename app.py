@@ -10,9 +10,9 @@ from gpt_prompts import (
     caption_to_keywords,
 )
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-from llm_grounded_diffusion.run import recombination
+from diffusers import StableDiffusionGLIGENPipeline
 from style_module.style_transfer import line_drawing_predict
-from layout_module.layout_metrics import generate_layouts
+from layout_module.layout_metrics import generate_layouts, xywh_to_xyxy
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -27,6 +27,10 @@ blipprocessor = Blip2Processor.from_pretrained(
 )
 blipmodel = Blip2ForConditionalGeneration.from_pretrained(
     "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16, low_cpu_mem_usage=True
+).to(DEVICE)
+
+gligen = StableDiffusionGLIGENPipeline.from_pretrained(
+    "masterful/gligen-1-4-generation-text-box", variant="fp16", torch_dtype=torch.float16
 ).to(DEVICE)
 
 # Setup SAM model
@@ -72,12 +76,13 @@ def keywordlist_to_string(keywords):
     return res
 
 
-def prompt_to_recombined_images(prompt):
+def prompt_to_recombined_images(input_prompt):
     '''
     Input: prompt
-        e.g. """Caption: Gray cat and a soccer ball on the grass, line drawing.
-                Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
-                Background prompt: A grassy area."""
+        e.g. """Caption: a waterfall and a modern high speed train running through the tunnel in a beautiful forest with fall foliage.
+                Objects: [('a waterfall', [0.1387, 0.2051, 0.4277, 0.7090]), ('a modern high speed train running through the tunnel', [0.4980, 0.4355, 0.8516, 0.7266])]
+            """
+            % Now: input bbox is xywh format, ratio. <-- It can be change!! 
     Output:
         - image_path_raw: generated raw image path
         - image_path_sketch: generated sketch image path
@@ -86,9 +91,33 @@ def prompt_to_recombined_images(prompt):
     image_path_sketch = "generated/" + f"{timestamp}_sketch.png"
     image_path_raw = "generated/" + f"{timestamp}_raw.png"
 
-    output_raw = recombination(prompt=prompt)
-    output_sketch = line_drawing_predict(output_raw, ver="Simple Lines")
-    output_raw.save(image_path_raw)
+    def parse_input(text=None):
+        try:
+            if "Objects: " in text:
+                caption, objects = text.split("Objects: ")
+            caption = caption.replace("Caption: ", "")
+            objects = ast.literal_eval(objects)    
+        except Exception as e:
+            raise Exception(f"response format invalid: {e} (text: {text})")
+    
+        return caption, objects
+    
+    input_prompt = parse_input(input_prompt)
+
+    prompt = input_prompt[0]
+    boxes = xywh_to_xyxy([i[1] for i in input_prompt[1]]) # [[0.1387, 0.2051, 0.4277, 0.7090], [0.4980, 0.4355, 0.8516, 0.7266]]
+    phrases = [i[0] for i in input_prompt[1]] # ["a waterfall", "a modern high speed train running through the tunnel"]
+
+    images = gligen(
+        prompt=prompt,
+        gligen_phrases=phrases,
+        gligen_boxes=boxes,
+        gligen_scheduled_sampling_beta=1,
+        output_type="pil",
+        num_inference_steps=15,
+    ).images
+    images[0].save(image_path_raw)
+    output_sketch = line_drawing_predict(image_path_raw, ver="Simple Lines")
     output_sketch.save(image_path_sketch)
 
     return image_path_raw, image_path_sketch
@@ -282,7 +311,7 @@ def generate_recombined_images():
         - prompt: prompt for layout diffusion
             e.g., """Caption: Gray cat and a soccer ball on the grass, line drawing.
                     Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
-                    Background prompt: A grassy area."""
+                    """
 
     Output:
         - image_path_sketch: generated sketch image path
@@ -333,8 +362,6 @@ def merge_elements():
             + description["scene"]
             + "\nObjects: "
             + str(layout)
-            + "\nBackground prompt: "
-            + description["background"]
         )
         image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt)
         description["layout"] = ast.literal_eval(layout)
