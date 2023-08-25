@@ -76,7 +76,7 @@ def keywordlist_to_string(keywords):
     return res
 
 
-def prompt_to_recombined_images(input_prompt):
+def prompt_to_recombined_images(input_prompt, gen_num=1):
     '''
     Input: prompt
         e.g. """Caption: a waterfall and a modern high speed train running through the tunnel in a beautiful forest with fall foliage.
@@ -84,12 +84,12 @@ def prompt_to_recombined_images(input_prompt):
             """
             % Now: input bbox is xywh format, ratio. <-- It can be change!! 
     Output:
-        - image_path_raw: generated raw image path
-        - image_path_sketch: generated sketch image path
+        - image_path_raw: generated raw image path list
+        - image_path_sketch: generated sketch image path list
     '''
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    image_path_sketch = "generated/" + f"{timestamp}_sketch.png"
-    image_path_raw = "generated/" + f"{timestamp}_raw.png"
+    image_path_sketch_list = ["generated/" + f"{timestamp}_{i}_sketch.png" for i in range(gen_num)]
+    image_path_raw_list = ["generated/" + f"{timestamp}_{i}_raw.png" for i in range(gen_num)]
 
     def parse_input(text=None):
         try:
@@ -115,12 +115,15 @@ def prompt_to_recombined_images(input_prompt):
         gligen_scheduled_sampling_beta=1,
         output_type="pil",
         num_inference_steps=15,
+        num_images_per_prompt=gen_num,
     ).images
-    images[0].save(image_path_raw)
-    output_sketch = line_drawing_predict(image_path_raw, ver="Simple Lines")
-    output_sketch.save(image_path_sketch)
 
-    return image_path_raw, image_path_sketch
+    for image, image_path_raw, image_path_sketch in zip(images, image_path_raw_list, image_path_sketch_list):
+        image.save(image_path_raw)
+        output_sketch = line_drawing_predict(image_path_raw, ver="Simple Lines")
+        output_sketch.save(image_path_sketch)
+
+    return image_path_raw_list, image_path_sketch_list
 
 
 # Routes
@@ -312,18 +315,21 @@ def generate_recombined_images():
             e.g., """Caption: Gray cat and a soccer ball on the grass, line drawing.
                     Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
                     """
-
+        - gen_num: number of images from single prompt
+                    
     Output:
-        - image_path_sketch: generated sketch image path
+        - image_path_raw: generated raw image path list
+        - image_path_sketch: generated sketch image path list
     '''
     data = request.get_json()
     prompt = data.get("prompt")
+    generation_image_num = data.get("gen_num")
 
-    image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt)
+    image_path_raw_list, image_path_sketch_list = prompt_to_recombined_images(prompt, gen_num=generation_image_num)
 
     return {
-        "image_path_raw": image_path_raw,
-        "image_path_sketch": image_path_sketch,
+        "image_path_raw": image_path_raw_list,
+        "image_path_sketch": image_path_sketch_list,
     }, 200
 
 
