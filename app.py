@@ -16,8 +16,25 @@ from layout_module.layout_metrics import generate_layouts
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-blipprocessor = None
-blipmodel = None
+# blipprocessor = None
+# blipmodel = None
+# sam = None
+# mask_generator = None
+
+# Setup BLIP model
+blipprocessor = Blip2Processor.from_pretrained(
+    "Salesforce/blip2-opt-2.7b", low_cpu_mem_usage=True
+)
+blipmodel = Blip2ForConditionalGeneration.from_pretrained(
+    "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16, low_cpu_mem_usage=True
+).to(DEVICE)
+
+# Setup SAM model
+MODEL_TYPE = "vit_l"
+CHECKPOINT_PATH = "./checkpoints/sam_vit_l_0b3195.pth"
+sam = sam_model_registry[MODEL_TYPE](checkpoint=CHECKPOINT_PATH)
+sam.to(DEVICE)
+mask_generator = SamAutomaticMaskGenerator(sam)
 
 app = Flask(__name__, static_folder="./generated")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -82,13 +99,22 @@ def prompt_to_recombined_images(prompt):
 
 @app.route("/setup", methods=["GET"])
 def setup():
-    global blipprocessor, blipmodel
+    # global blipprocessor, blipmodel, sam, mask_generator
 
-    # Setup BLIP model
-    blipprocessor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-    blipmodel = Blip2ForConditionalGeneration.from_pretrained(
-        "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16
-    ).to(DEVICE)
+    # # Setup BLIP model
+    # blipprocessor = Blip2Processor.from_pretrained(
+    #     "Salesforce/blip2-opt-2.7b", low_cpu_mem_usage=True
+    # )
+    # blipmodel = Blip2ForConditionalGeneration.from_pretrained(
+    #     "Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16, low_cpu_mem_usage=True
+    # ).to(DEVICE)
+
+    # # Setup SAM model
+    # MODEL_TYPE = "vit_l"
+    # CHECKPOINT_PATH = "./checkpoints/sam_vit_l_0b3195.pth"
+    # sam = sam_model_registry[MODEL_TYPE](checkpoint=CHECKPOINT_PATH)
+    # sam.to(DEVICE)
+    # mask_generator = SamAutomaticMaskGenerator(sam)
 
     return "setup done"
 
@@ -183,12 +209,6 @@ def extract_layout_from_image():
     Output:
         - bboxes: list of bounding boxes
     """
-    # Setup SAM model
-    MODEL_TYPE = "vit_l"
-    CHECKPOINT_PATH = "./checkpoints/sam_vit_l_0b3195.pth"
-    sam = sam_model_registry[MODEL_TYPE](checkpoint=CHECKPOINT_PATH)
-    sam.to(DEVICE)
-    mask_generator = SamAutomaticMaskGenerator(sam)
 
     data = request.get_json()
     filename = data.get("filename")
@@ -227,9 +247,6 @@ def extract_layout_from_image():
             )
         i += 1
 
-    sam = None
-    mask_generator = None
-
     return {"bboxes": bboxes}, 200
 
 
@@ -243,16 +260,16 @@ def recommend_layouts():
     Output:
         - layouts: 2-dim list of 10 recommended layouts
     """
-    
+
     data = request.get_json()
     old_layout = data.get("layout")
-    print(old_layout)
-    
     layouts = []
     # for i in range(1, len(old_layout)+1):
     #     layouts.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=i))
-    target_bbox_num = data.get('target_bbox_num')
-    layouts.append(generate_layouts(old_layout, recommends_num=10, target_bbox_num=target_bbox_num))
+    target_bbox_num = data.get("target_bbox_num")
+    layouts = generate_layouts(
+        old_layout, recommends_num=10, target_bbox_num=target_bbox_num
+    )
 
     return {"layouts": layouts}, 200
 
@@ -328,4 +345,4 @@ def merge_elements():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7887, debug=True)
+    app.run(host="0.0.0.0", port=7887, debug=False)

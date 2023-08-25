@@ -70,7 +70,11 @@ def keywords_expansion(elementlist):
     res = []
     response_content = response.choices[0].message.content
     response_content = response_content.replace("Action & Pose", "Action & pose")
+    response_content = response_content.replace("Action & Poses", "Action & pose")
+    response_content = response_content.replace("Action & poses", "Action & pose")
     response_content = response_content.replace("Theme & Mood", "Theme & mood")
+    response_content = response_content.replace("Theme & Moods", "Theme & mood")
+    response_content = response_content.replace("Theme & moods", "Theme & mood")
 
     for line in response_content.split("\n"):
         keywordType = line.split(": ")[0]
