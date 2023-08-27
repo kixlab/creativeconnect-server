@@ -1,4 +1,4 @@
-import openai
+import openai, ast
 
 openai.api_key = "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"
 
@@ -87,11 +87,11 @@ def keywords_expansion(elementlist):
 
 def keywords_to_descriptions(elementlist):
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
-                "content": 'The user wants to draw an illustration, with the assistance of you. You will be provided with multiple keywords users wanted to include in their illustrations. There are three types of keywords: Subject matter, Action & pose, and Theme & mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one-word.\n\nYour task is to generate three descriptions of the illustration that the user can draw based on the given keywords. The three descriptions should be significantly different with each other. Each description should include three things: "Scene", "Background", and "Objects".\n\n"Scene" is a simple description of the overall image of the description. This should include all objects in the "Objects" list. Do not make it too long.\n\n"Objects" is a list of the objects depicted in the illustrations, and a short description of them. The objects should be one of the given "Subject matters", or something related to them. You don\'t have to include all given subject matters. The given action and concept should also be considered for generating the object\'s detail.\n\nThe background is a short concise sentence describing the background of the illustration. It should be well aligned with the objects depicted and the given concepts.',
+                "content": 'The user wants to draw an illustration, with the assistance of you. You will be provided with multiple keywords users wanted to include in their illustrations. There are three types of keywords: Subject matter, Action & pose, and Theme & mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one-word.\n\nYour task is to generate three descriptions of the illustration that the user can draw based on the given keywords. The three descriptions should be significantly different from each other. Each description should include three things: "Caption" and "Objects".\n\n"Caption" is a simple description of the overall image of the description. This should include some objects in the "Objects" list. Keep it concise. Do not make it long and do not include unnecessary adjectives.\n\n"Objects" is a list of the objects depicted in the illustrations, and a short description of them. The objects should be one of the given "Subject matters", or something related to them. You don\'t have to include all given subject matters. The given action and concept should also be considered for generating the object\'s detail.',
             },
             {
                 "role": "user",
@@ -99,19 +99,23 @@ def keywords_to_descriptions(elementlist):
             },
             {
                 "role": "assistant",
-                "content": "1.\nScene: A joyous spectacle unfolds in a vibrant backyard as a cat and a dog are engaged in delightful play, with a ball being their favorite toy.\nObjects: [(ball, a brightly colored ball), (dog, a dog jumping with its tongue sticking out), (cat, an agile cat in mid-jump)]\nBackground: A suburban backyard with lush green grass and bright flowers.\n\n2.\nScene: A beach where a dog is united in its pursuit of a bounce ball.\nObjects: [(ball, a sandy beach ball), (dog, a spotted dog leaping for the ball)]\nBackground: A peaceful beach vista, with playful seagulls and gentle waves crashing against the shore.\n\n3.\nScene: In a residential living room, the cat and dog both defying gravity in their jumps to catch the toy.\nObjects: [(toy, a small rubber toy with vibrant stripes), (dog, a bouncy terrier flying mid-air), (cat, a Siamese cat also in mid-jump)]\nBackground: A warm and cozy living room with sunlight pouring in through the windows.",
+                "content": "1.\nScene: In the backyard, cats and dogs play happily with a ball which is their favorite toy.\nObjects: [(ball, a brightly colored ball), (dog, a dog jumping with its tongue sticking out), (cat, an agile cat in mid-jump)]\n\n2.\nScene: A beach where a dog is united in its pursuit of a bouncing ball.\nObjects: [(ball, a sandy beach ball), (dog, a spotted dog leaping for the ball)]\n\n3.\nScene: In a residential living room, the cat and dog both defy gravity in their jumps to catch the toy.\nObjects: [(toy, a small rubber toy with vibrant stripes), (dog, a bouncy terrier flying mid-air), (cat, a Siamese cat also in mid-jump)]",
             },
             {
                 "role": "user",
-                "content": "Subject matter: woman, drink, hat, chair\nAction & pose: sipping drink, relaxing, sitting\nTheme & mood: sunny, relaxed",
+                "content": "Subject matter: dinosaur, drink, hat, chair\nAction & pose: relaxing\nTheme & mood: sunny, relaxed",
             },
             {
                 "role": "assistant",
-                "content": "1.\nScene: A relaxed woman wearing a wide-brimmed hat is sitting in a comfortable chair, sipping her cool drink.\nObjects: [(woman, a casual-dressed woman with a relaxed smile on her face), (drink, a sweating glass filled with a luscious summer cocktail), (hat, the woman's wide-brimmed straw hat), (chair, a comfy chair with soft white cushions)]\nBackground: On a sunny outdoor patio with lush, green foliage around. \n\n2.\nScene: A stylish woman is peacefully enjoying her drink at an elegant street café.\nObjects: [(woman, an elegantly dressed woman with a serene facial expression), (drink, a classy cocktail in a stemmed glass), (chair, a classic bistro chair with a hat hanging on its backrest)]\nBackground:  An outdoor café in a city street against the backdrop of colorful buildings. \n\n3.\nScene: The woman in a panama hat relaxes on a mat with her drink, feeling the warmth of the sun. \nObjects: [(woman, a woman in a breezy summer dress), (drink, a jug of iced lemonade), (hat, a jaunty panama hat rested on her knee)]\nBackground: A porch area with a garden in the background and sunlight filtering through the leaves.",
+                "content": "1.\nScene: A dinosaur wearing a hat, lounging with a drink on a chair under the sun.\nObjects: [(dinosaur, a large but friendly looking dinosaur), (drink, a fruity cocktail with a tiny umbrella), (hat, a wide-brimmed straw hat), (chair, a comfortable looking lounge chair)]\n\n2.\nScene: Dinosaur relaxes in a sophisticated environment with a drink and plops a hat on the chair next to it.\nObjects: [(dinosaur, a dinosaur in a suit), (drink, a fancy drink in a crystal glass), (hat, a stylish trilby), (chair, a plush velvet chair)]\n\n3.\nScene: A kid with a hat is playing on a picnic mat with a toy dinosaur.\nObjects: [(kid, a kid with pink shirts), (dinosaur, a small green toy dinosaur)]",
             },
             {
                 "role": "user",
-                "content": "Subject matter: boy, dreamy scene\nAction & pose: playing with dino toys",
+                "content": "Subject matter: dog, teeth\nAction & pose: \nTheme & mood: care",
+            },
+            {
+                "role": "assistant",
+                "content": "1.\nCaption: A caring veterinarian examining a dog's teeth.\nObjects: [(dog, a dog sitting calmly), (teeth, a pair of dental tools), (vet, a veterinarian wearing a lab coat)]\n\n2.\nCaption: A child diligently brushing their dog's teeth.\nObjects: [(dog, a dog lying on its back), (teeth, a toothbrush and dog toothpaste), (child, a child brushing the dog's teeth)]\n\n3.\nCaption: A dental hygienist showing a dog owner the correct brushing technique for their pet's teeth.\nObjects: [(dog, a dog standing on a dental examination table), (teeth, a dental mirror and toothbrush), (hygienist, a dental hygienist demonstrating the brushing technique)]",
             },
             {"role": "user", "content": elementlist},
         ],
@@ -124,19 +128,16 @@ def keywords_to_descriptions(elementlist):
     res = []
     for r in response.choices[0].message.content.split("\n\n"):
         objects = {}
-        background = ""
         for line in r.split("\n"):
             if line.startswith("Objects"):
                 curr_objs = line.split(": ")[1].strip("[]").split("), ")
                 for obj in curr_objs:
                     obj = obj.strip("()").split(", ")
                     objects[obj[0]] = obj[1]
-            elif line.startswith("Background"):
-                background = line.split(": ")[1]
-            elif line.startswith("Scene"):
-                scene = line.split(": ")[1]
+            elif line.startswith("Caption"):
+                caption = line.split(": ")[1]
         try:
-            res.append({"objects": objects, "background": background, "scene": scene})
+            res.append({"objects": objects, "caption": caption})
         except:
             pass
 
@@ -147,7 +148,7 @@ def caption_to_layout(caption, objects):
     input_prompt = caption + "\n[" + ", ".join(objects) + "]"
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
@@ -159,7 +160,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('car', [21, 281, 211, 159]), ('truck', [269, 283, 209, 160]), ('balloon', [66, 8, 145, 135]), ('bird', [296, 42, 143, 100])]",
+                "content": "[('car', [0.041, 0.549, 0.412, 0.31]), ('truck', [0.525, 0.553, 0.408, 0.313]), ('balloon', [0.129, 0.016, 0.283, 0.264]), ('bird', [0.578, 0.082, 0.279, 0.195])]",
             },
             {
                 "role": "user",
@@ -167,7 +168,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('wooden table', [20, 148, 472, 216]), ('apple', [150, 226, 100, 100]), ('apple', [280, 226, 100, 100])]",
+                "content": "[('wooden table', [0.039, 0.289, 0.922, 0.422]), ('apple', [0.293, 0.441, 0.195, 0.195]), ('apple', [0.547, 0.441, 0.195, 0.195])]",
             },
             {
                 "role": "user",
@@ -175,7 +176,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('skier', [5, 152, 139, 168]), ('skier', [278, 192, 121, 158]), ('skier', [148, 173, 124, 155]), ('palm tree', [404, 105, 103, 251])]",
+                "content": "[('skier', [0.01, 0.297, 0.271, 0.328]), ('skier', [0.543, 0.375, 0.236, 0.308]), ('skier', [0.289, 0.338, 0.242, 0.303]), ('palm tree', [0.789, 0.205, 0.201, 0.49])]",
             },
             {
                 "role": "user",
@@ -183,7 +184,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('steam boat', [232, 225, 257, 149]), ('dolphin', [21, 249, 189, 123])]",
+                "content": "[('steam boat', [0.453, 0.439, 0.502, 0.291]), ('dolphin', [0.041, 0.486, 0.369, 0.24])]",
             },
             {
                 "role": "user",
@@ -191,7 +192,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('cat', [51, 67, 271, 324]), ('dog', [302, 119, 211, 228])]",
+                "content": "[('cat', [0.1, 0.131, 0.529, 0.632]), ('dog', [0.589, 0.232, 0.412, 0.445])]",
             },
             {
                 "role": "user",
@@ -199,7 +200,7 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('panda', [30, 171, 212, 226]), ('panda', [264, 173, 222, 221])]",
+                "content": "[('panda', [0.059, 0.335, 0.414, 0.441]), ('panda', [0.516, 0.338, 0.434, 0.432])]",
             },
             {
                 "role": "user",
@@ -207,7 +208,80 @@ def caption_to_layout(caption, objects):
             },
             {
                 "role": "assistant",
-                "content": "[('boy', [188, 39, 154, 249]), ('dino toys', [77, 240, 103, 130]), ('dino toys', [278, 243, 96, 127])]",
+                "content": "[('boy', [0.367, 0.076, 0.301, 0.486]), ('dino toys', [0.15, 0.469, 0.201, 0.254]), ('dino toys', [0.543, 0.475, 0.188, 0.248])]",
+            },
+            {"role": "user", "content": input_prompt},
+        ],
+        temperature=0,
+        max_tokens=256,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+
+    response_content = response.choices[0].message.content
+    # [('car', [21, 281, 211, 159]), ('truck', [269, 283, 209, 160]), ('balloon', [66, 8, 145, 135]), ('bird', [296, 42, 143, 100])]
+    # response_content = ast.literal_eval(response_content)
+    return response_content
+
+
+def caption_ref_to_layout(caption, objects, refLayout):
+    input_prompt = caption + "\n[" + ", ".join(objects) + "]\n" + str(refLayout)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an intelligent bounding box generator. I will provide you with a caption for an illustration, a list of the objects, and reference bounding boxes. Your task is to generate the bounding boxes for the objects based on the caption. The generated bounding boxes should be similar with the reference bounding boxes.\n\nEach bounding box should be in the format of (object name, [top-left x coordinate, top-left y coordinate, box width, box height]). The bounding boxes are represented as a proportion. The top-left corner has coordinate [0, 0]. The bottom-right corner has coordinnate [1, 1]. The bounding boxes should not go beyond the image boundaries. If an object must appear several times by the provided caption, multiple bounding boxes may be added for the object.\n\nThe generated and reference bounding boxes should be similar in terms of the overall arrangement of the objects. For example, if the reference bounding boxes are arranged in a way that makes a big space in the middle of the image, the generated bounding boxes also should leave some space in the middle as well. Another example is that, if the reference bounding boxes are biased toward the left side of the image, the generated bounding boxes should also biased toward left.",
+            },
+            {
+                "role": "user",
+                "content": "A realistic image of landscape scene depicting a green car parking on the left of a blue truck, with a red air balloon and a bird in the sky\n[car, truck, air balloon, bird]\n[[0.023, 0.785, 0.172, 0.181], [0.221, 0.692, 0.408, 0.274], [0.699, 0.580, 0.279, 0.244], [0.655, 0.841, 0.323, 0.125]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('car', [0.041, 0.783, 0.442, 0.179]), ('truck', [0.525, 0.699, 0.408, 0.263]), ('balloon', [0.261, 0.458, 0.222, 0.264]), ('bird', [0.525, 0.458, 0.279, 0.195])]",
+            },
+            {
+                "role": "user",
+                "content": "A realistic top-down view of a wooden table with two apples on it\n[wooden table, apple]\n[[0.023, 0.044, 0.520, 0.181], [0.570, 0.044, 0.408, 0.274], [0.023, 0.841, 0.581, 0.125], [0.655, 0.841, 0.323, 0.125]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('wooden table', [0.219, 0, 0.562, 1]), ('apple', [0.402, 0.138, 0.195, 0.195]), ('apple', [0.402, 0.667, 0.195, 0.195])]",
+            },
+            {
+                "role": "user",
+                "content": "A realistic scene of three skiers standing in a line on the snow near a palm tree\n[skier, palm tree]\n[[0.795, 0.353, 0.183, 0.441], [0.570, 0.044, 0.408, 0.274], [0.655, 0.841, 0.323, 0.125]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('skier', [0.487, 0.131, 0.142, 0.441]), ('skier', [0.661, 0.131, 0.143, 0.441]), ('skier', [0.836, 0.131, 0.142, 0.441]), ('palm tree', [0.795, 0.613, 0.183, 0.387])]",
+            },
+            {
+                "role": "user",
+                "content": "An oil painting of a pink dolphin jumping on the left of a steam boat on the sea\n[steam boat, dolphin]\n[[0.032, 0.018, 0.183, 0.285], [0.032, 0.340, 0.135, 0.420], [0.032, 0.787, 0.236, 0.168]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('steam boat', [0.273, 0, 0.245, 1]), ('dolphin', [0.032, 0.455, 0.135, 0.420])]",
+            },
+            {
+                "role": "user",
+                "content": "Immersed in his imagination, a boy is indoors enacting a prehistoric tale using four toy dinosaurs.\n[boy, dino toys]\n[[0.023, 0.044, 0.520, 0.181], [0.570, 0.044, 0.408, 0.274], [0.023, 0.841, 0.581, 0.125], [0.655, 0.841, 0.323, 0.125], [0.023, 0.253, 0.149, 0.563], [0.824, 0.33, 0.154, 0.496], [0.283, 0.375, 0.491, 0.407]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('boy', [0.250, 0.218, 0.566, 0.563]), ('dino toys', [0.074, 0.556, 0.137, 0.284]), ('dino toys', [0.074, 0.76, 0.137, 0.284]), ('dino toys', [0.659, 0.041, 0.254, 0.134]), ('dino toys', [0.464, 0.840, 0.195, 0.120])]",
+            },
+            {
+                "role": "user",
+                "content": "Two pandas in a forest without flowers\n[panda]\n[[0.795, 0.353, 0.183, 0.441], [0.570, 0.044, 0.408, 0.274], [0.655, 0.841, 0.323, 0.125], [0.032, 0.018, 0.183, 0.285], [0.032, 0.340, 0.135, 0.420], [0.032, 0.787, 0.236, 0.168]]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('panda', [0.114, 0.399, 0.183, 0.441]), ('panda', [0.733, 0.106, 0.150, 0.441])]",
             },
             {"role": "user", "content": input_prompt},
         ],
@@ -221,4 +295,77 @@ def caption_to_layout(caption, objects):
     response_content = response.choices[0].message.content
     # [('car', [21, 281, 211, 159]), ('truck', [269, 283, 209, 160]), ('balloon', [66, 8, 145, 135]), ('bird', [296, 42, 143, 100])]
     # response_content = ast.literal_eval(response_content)
+    return response_content
+
+
+def caption_layout_matcher(caption, objects, layout):
+    input_prompt = caption + "\n[" + ", ".join(objects) + "]\n" + str(layout)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an intelligent bounding box matcher. I will provide you with a caption that describes an illustration, a list of the objects that are included in the illustration, and a list of bounding boxes. Your task is to match bounding boxes to each object to make the illustration most balanced and realistic.\n\nEach bounding box is in the format of (object name, [top-left x coordinate, top-left y coordinate, box width, box height]). The bounding boxes are represented as a proportion. The top-left corner has coordinate [0, 0]. The bottom-right corner has coordinnate [1, 1]. The bounding boxes should not go beyond the image boundaries.",
+            },
+            {
+                "role": "user",
+                "content": "A realistic image of landscape scene depicting a green car parking on the left of a blue truck, with a red air balloon and a bird in the sky\n[air balloon, car, bird, truck]\n[0.041, 0.783, 0.442, 0.179], [0.525, 0.699, 0.408, 0.263], [0.261, 0.458, 0.222, 0.264], [0.525, 0.458, 0.279, 0.195]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('car', [0.041, 0.783, 0.442, 0.179]), ('truck', [0.525, 0.699, 0.408, 0.263]), ('balloon', [0.261, 0.458, 0.222, 0.264]), ('bird', [0.525, 0.458, 0.279, 0.195])]",
+            },
+            {
+                "role": "user",
+                "content": "A realistic top-down view of a wooden table with two apples on it\n[apple, apple, wooden table]\n[0.219, 0, 0.562, 1], [0.402, 0.138, 0.195, 0.195], [0.402, 0.667, 0.195, 0.195]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('wooden table', [0.219, 0, 0.562, 1]), ('apple', [0.402, 0.138, 0.195, 0.195]), ('apple', [0.402, 0.667, 0.195, 0.195])]",
+            },
+            {
+                "role": "user",
+                "content": "A realistic scene of three skiers standing in a line on the snow near a palm tree\n[skier, skier, skier, palm tree]\n[0.487, 0.131, 0.142, 0.441], [0.661, 0.131, 0.143, 0.441], [0.836, 0.131, 0.142, 0.441], [0.795, 0.613, 0.183, 0.387]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('skier', [0.487, 0.131, 0.142, 0.441]), ('skier', [0.661, 0.131, 0.143, 0.441]), ('skier', [0.836, 0.131, 0.142, 0.441]), ('palm tree', [0.795, 0.613, 0.183, 0.387])]",
+            },
+            {
+                "role": "user",
+                "content": "An oil painting of a pink dolphin jumping on the left of a steam boat on the sea\n[dolphin, steam boat]\n[0.273, 0, 0.245, 1], [0.032, 0.455, 0.135, 0.420]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('steam boat', [0.273, 0, 0.245, 1]), ('dolphin', [0.032, 0.455, 0.135, 0.420])]",
+            },
+            {
+                "role": "user",
+                "content": "Immersed in his imagination, a boy is indoors enacting a prehistoric tale using four toy dinosaurs.\n[dino toys, dino toys, dino toys, boy, dino toys]\n[0.250, 0.218, 0.566, 0.563], [0.074, 0.556, 0.137, 0.284], [0.074, 0.76, 0.137, 0.284], [0.659, 0.041, 0.254, 0.134], [0.464, 0.840, 0.195, 0.120]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('boy', [0.250, 0.218, 0.566, 0.563]), ('dino toys', [0.074, 0.556, 0.137, 0.284]), ('dino toys', [0.074, 0.76, 0.137, 0.284]), ('dino toys', [0.659, 0.041, 0.254, 0.134]), ('dino toys', [0.464, 0.840, 0.195, 0.120])]",
+            },
+            {
+                "role": "user",
+                "content": "Two pandas in a forest without flowers\n[panda, panda]\n[0.114, 0.399, 0.183, 0.441], [0.733, 0.106, 0.150, 0.441]",
+            },
+            {
+                "role": "assistant",
+                "content": "[('panda', [0.114, 0.399, 0.183, 0.441]), ('panda', [0.733, 0.106, 0.150, 0.441])]",
+            },
+            {"role": "user", "content": input_prompt},
+        ],
+        temperature=0,
+        max_tokens=256,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+
+    response_content = response.choices[0].message.content
+    # [('car', [21, 281, 211, 159]), ('truck', [269, 283, 209, 160]), ('balloon', [66, 8, 145, 135]), ('bird', [296, 42, 143, 100])]
+    response_content = ast.literal_eval(response_content)
     return response_content

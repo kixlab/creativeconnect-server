@@ -8,6 +8,7 @@ from gpt_prompts import (
     keywords_to_descriptions,
     keywords_expansion,
     caption_to_keywords,
+    caption_layout_matcher,
 )
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 from diffusers import StableDiffusionGLIGENPipeline
@@ -30,7 +31,9 @@ blipmodel = Blip2ForConditionalGeneration.from_pretrained(
 ).to(DEVICE)
 
 gligen = StableDiffusionGLIGENPipeline.from_pretrained(
-    "masterful/gligen-1-4-generation-text-box", variant="fp16", torch_dtype=torch.float16
+    "masterful/gligen-1-4-generation-text-box",
+    variant="fp16",
+    torch_dtype=torch.float16,
 ).to(DEVICE)
 
 # Setup SAM model
@@ -82,31 +85,39 @@ def prompt_to_recombined_images(input_prompt, gen_num=1):
         e.g. """Caption: a waterfall and a modern high speed train running through the tunnel in a beautiful forest with fall foliage.
                 Objects: [('a waterfall', [0.1387, 0.2051, 0.4277, 0.7090]), ('a modern high speed train running through the tunnel', [0.4980, 0.4355, 0.8516, 0.7266])]
             """
-            % Now: input bbox is xywh format, ratio. <-- It can be change!! 
+            % Now: input bbox is xywh format, ratio. <-- It can be change!!
     Output:
         - image_path_raw: generated raw image path list
         - image_path_sketch: generated sketch image path list
     '''
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    image_path_sketch_list = ["generated/" + f"{timestamp}_{i}_sketch.png" for i in range(gen_num)]
-    image_path_raw_list = ["generated/" + f"{timestamp}_{i}_raw.png" for i in range(gen_num)]
+    image_path_sketch_list = [
+        "generated/" + f"{timestamp}_{i}_sketch.png" for i in range(gen_num)
+    ]
+    image_path_raw_list = [
+        "generated/" + f"{timestamp}_{i}_raw.png" for i in range(gen_num)
+    ]
 
     def parse_input(text=None):
         try:
             if "Objects: " in text:
                 caption, objects = text.split("Objects: ")
             caption = caption.replace("Caption: ", "")
-            objects = ast.literal_eval(objects)    
+            objects = ast.literal_eval(objects)
         except Exception as e:
             raise Exception(f"response format invalid: {e} (text: {text})")
-    
+
         return caption, objects
-    
+
     input_prompt = parse_input(input_prompt)
 
     prompt = input_prompt[0]
-    boxes = xywh_to_xyxy([i[1] for i in input_prompt[1]]) # [[0.1387, 0.2051, 0.4277, 0.7090], [0.4980, 0.4355, 0.8516, 0.7266]]
-    phrases = [i[0] for i in input_prompt[1]] # ["a waterfall", "a modern high speed train running through the tunnel"]
+    boxes = xywh_to_xyxy(
+        [i[1] for i in input_prompt[1]]
+    )  # [[0.1387, 0.2051, 0.4277, 0.7090], [0.4980, 0.4355, 0.8516, 0.7266]]
+    phrases = [
+        i[0] for i in input_prompt[1]
+    ]  # ["a waterfall", "a modern high speed train running through the tunnel"]
 
     images = gligen(
         prompt=prompt,
@@ -118,9 +129,11 @@ def prompt_to_recombined_images(input_prompt, gen_num=1):
         num_images_per_prompt=gen_num,
     ).images
 
-    for image, image_path_raw, image_path_sketch in zip(images, image_path_raw_list, image_path_sketch_list):
+    for image, image_path_raw, image_path_sketch in zip(
+        images, image_path_raw_list, image_path_sketch_list
+    ):
         image.save(image_path_raw)
-        output_sketch = line_drawing_predict(image_path_raw, ver="Simple Lines")
+        output_sketch = line_drawing_predict(image, ver="Simple Lines")
         output_sketch.save(image_path_sketch)
 
     return image_path_raw_list, image_path_sketch_list
@@ -154,6 +167,32 @@ def setup():
 @app.route("/", methods=["GET"])
 def test():
     return "hello, world!"
+
+
+@app.route("/sendImage", methods=["POST"])
+def store_image():
+    """
+    Input:
+        - image: base64 encoded image
+
+    Output:
+        - filename: filename of uploaded image
+    """
+    data = request.get_json()
+    image = data.get("image")
+    if not image:
+        return {"message": "No file received"}, 400
+
+    # Save image
+    file_content = image.split(";base64,")[1]
+    file_extension = image.split(";")[0].split("/")[1]
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{timestamp}.{file_extension}"
+
+    with open("uploaded/" + filename, "wb") as f:
+        f.write(base64.b64decode(file_content))
+
+    return {"filename": filename}, 200
 
 
 # Image --> Keyword list
@@ -239,7 +278,7 @@ def extract_layout_from_image():
         - filename: filename of uploaded image
 
     Output:
-        - bboxes: list of bounding boxes
+        - bboxes: list of bounding boxes (proportion of image size)
     """
 
     data = request.get_json()
@@ -274,9 +313,7 @@ def extract_layout_from_image():
         mask = sorted_masks[i]
         if mask["area"] < 0.7 * width * height:
             x, y, w, h = mask["bbox"]
-            bboxes.append(
-                (x * 200 / width, y * 200 / height, w * 200 / width, h * 200 / height)
-            )
+            bboxes.append((x / width, y / height, w / width, h / height))
         i += 1
 
     return {"bboxes": bboxes}, 200
@@ -287,10 +324,10 @@ def extract_layout_from_image():
 def recommend_layouts():
     """
     Input:
-        - layout: list of xywh format bounding boxes
+        - layout: list of xywh format bounding boxes (512*512)
 
     Output:
-        - layouts: 2-dim list of 10 recommended layouts
+        - layouts: 2-dim list of 10 recommended layouts (512*512)
     """
 
     data = request.get_json()
@@ -316,7 +353,7 @@ def generate_recombined_images():
                     Objects: [('a gray cat', [67, 243, 120, 126]), ('a soccer ball', [265, 193, 190, 210])]
                     """
         - gen_num: number of images from single prompt
-                    
+
     Output:
         - image_path_raw: generated raw image path list
         - image_path_sketch: generated sketch image path list
@@ -325,7 +362,9 @@ def generate_recombined_images():
     prompt = data.get("prompt")
     generation_image_num = data.get("gen_num")
 
-    image_path_raw_list, image_path_sketch_list = prompt_to_recombined_images(prompt, gen_num=generation_image_num)
+    image_path_raw_list, image_path_sketch_list = prompt_to_recombined_images(
+        prompt, gen_num=generation_image_num
+    )
 
     return {
         "image_path_raw": image_path_raw_list,
@@ -352,6 +391,37 @@ def generate_elements_from_elements():
     return {"suggestedKeywords": suggestedKeywords}, 200
 
 
+# Keyword list --> Descriptions only
+@app.route("/mergeKeywordsToDescriptions", methods=["POST"])
+def merge_elements_to_desc():
+    data = request.get_json()
+    keywords = data.get("keywords")
+    keywordString = keywordlist_to_string(keywords)
+    generatedDescriptions = keywords_to_descriptions(keywordString)
+
+    return {"descriptions": generatedDescriptions}, 200
+
+
+# Descriptions --> Layouts & Sketches
+@app.route("/descriptionToSketch", methods=["POST"])
+def descriptionToSketch():
+    data = request.get_json()
+    description = data.get("description")
+
+    objects = list(description["objects"].keys())
+    print(objects)
+    layout = caption_to_layout(description["caption"], objects)
+    print(layout)
+    prompt = "Caption: " + description["caption"] + "\nObjects: " + str(layout)
+    print(prompt)
+    image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt, gen_num=1)
+    description["layout"] = ast.literal_eval(layout)
+    description["image_path_raw"] = image_path_raw
+    description["image_path_sketch"] = image_path_sketch
+
+    return {"image_path_sketch": image_path_sketch}, 200
+
+
 # Keyword list --> Descriptions & Layouts & Sketches
 @app.route("/mergeKeywords", methods=["POST"])
 def merge_elements():
@@ -362,19 +432,75 @@ def merge_elements():
 
     for description in generatedDescriptions:
         objects = list(description["objects"].keys())
-        layout = caption_to_layout(description["scene"], objects)
-        prompt = (
-            "Caption: "
-            + description["scene"]
-            + "\nObjects: "
-            + str(layout)
-        )
+        print(objects)
+        layout = caption_to_layout(description["caption"], objects)
+        print(layout)
+        prompt = "Caption: " + description["caption"] + "\nObjects: " + str(layout)
+        print(prompt)
         image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt)
         description["layout"] = ast.literal_eval(layout)
         description["image_path_raw"] = image_path_raw
         description["image_path_sketch"] = image_path_sketch
 
     return {"descriptions": generatedDescriptions}, 200
+
+
+@app.route("/getMoreSketches", methods=["POST"])
+def generate_more_sketches():
+    data = request.get_json()
+    description = data.get("description")
+    old_layout = data.get("layout")
+    target_bbox_num = len(description["objects"])
+
+    # Generate layouts
+    new_layouts = []
+    if old_layout is None or len(old_layout) < len(description["objects"]):
+        original_layout = ast.literal_eval(
+            caption_to_layout(description["caption"], description["objects"])
+        )
+        adjusted_layout = []
+        for _, bbox in original_layout:
+            adjusted_layout.append(
+                [bbox[0] * 512, bbox[1] * 512, bbox[2] * 512, bbox[3] * 512]
+            )
+        layouts = generate_layouts(
+            adjusted_layout, recommends_num=5, target_bbox_num=target_bbox_num
+        )
+    else:
+        layouts = generate_layouts(
+            old_layout, recommends_num=5, target_bbox_num=target_bbox_num
+        )
+
+    for layout in layouts:
+        adjusted_layout = []
+        for bbox in layout:
+            adjusted_layout.append(
+                [bbox[0] / 512, bbox[1] / 512, bbox[2] / 512, bbox[3] / 512]
+            )
+        new_layout = caption_layout_matcher(
+            description["caption"], description["objects"], str(adjusted_layout)
+        )
+        new_layouts.append(new_layout)
+
+    print("new_layouts")
+    print(new_layouts)
+
+    image_path_raw_list = []
+    image_path_sketch_list = []
+
+    # Generate skteches
+    for new_layout in new_layouts:
+        prompt = "Caption: " + description["caption"] + "\nObjects: " + str(new_layout)
+        image_path_raw, image_path_sketch = prompt_to_recombined_images(
+            prompt, gen_num=1
+        )
+        image_path_raw_list.append(image_path_raw[0])
+        image_path_sketch_list.append(image_path_sketch[0])
+
+    return {
+        "image_path_raw": image_path_raw_list,
+        "image_path_sketch": image_path_sketch_list,
+    }, 200
 
 
 if __name__ == "__main__":
