@@ -46,6 +46,9 @@ mask_generator = SamAutomaticMaskGenerator(sam)
 app = Flask(__name__, static_folder="./generated")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+from log import create_log_api
+
+app.register_blueprint(create_log_api(), url_prefix="/log")
 
 # Util functions
 
@@ -412,7 +415,13 @@ def descriptionToSketch():
     print(objects)
     layout = caption_to_layout(description["caption"], objects)
     print(layout)
-    prompt = "Caption: " + description["caption"] + "\nObjects: " + str(layout)
+    prompt = (
+        "Caption: "
+        + description["caption"]
+        + ",line drawing illustration"
+        + "\nObjects: "
+        + str(layout)
+    )
     print(prompt)
     image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt, gen_num=1)
     description["layout"] = ast.literal_eval(layout)
@@ -435,7 +444,13 @@ def merge_elements():
         print(objects)
         layout = caption_to_layout(description["caption"], objects)
         print(layout)
-        prompt = "Caption: " + description["caption"] + "\nObjects: " + str(layout)
+        prompt = (
+            "Caption: "
+            + description["caption"]
+            + ",line drawing illustration"
+            + "\nObjects: "
+            + str(layout)
+        )
         print(prompt)
         image_path_raw, image_path_sketch = prompt_to_recombined_images(prompt)
         description["layout"] = ast.literal_eval(layout)
@@ -490,7 +505,13 @@ def generate_more_sketches():
 
     # Generate skteches
     for new_layout in new_layouts:
-        prompt = "Caption: " + description["caption"] + "\nObjects: " + str(new_layout)
+        prompt = (
+            "Caption: "
+            + description["caption"]
+            + ",line drawing illustration"
+            + "\nObjects: "
+            + str(new_layout)
+        )
         image_path_raw, image_path_sketch = prompt_to_recombined_images(
             prompt, gen_num=1
         )

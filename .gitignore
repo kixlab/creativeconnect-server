@@ -3,3 +3,5 @@ __pycache__/
 /uploaded
 /ovseg
 *.pth
+
+/logs
