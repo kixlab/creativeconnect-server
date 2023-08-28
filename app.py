@@ -229,6 +229,7 @@ def extract_element_from_image():
     image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 
     # Get whole image description
+    segmented_descriptions = []
     inputs = blipprocessor(images=image_rgb, return_tensors="pt").to(
         DEVICE, torch.float16
     )
@@ -236,7 +237,7 @@ def extract_element_from_image():
     whole_image_description = blipprocessor.batch_decode(
         generated_ids, skip_special_tokens=True
     )[0].strip()
-    segmented_descriptions = whole_image_description + "\n"
+    segmented_descriptions.append(whole_image_description)
 
     # Get segmented image descriptions
     image_segments = []
@@ -255,8 +256,10 @@ def extract_element_from_image():
         generated_text = blipprocessor.batch_decode(
             generated_ids, skip_special_tokens=True
         )[0].strip()
-        segmented_descriptions += generated_text + "\n"
+        segmented_descriptions.append(generated_text)
 
+    segmented_descriptions = "\n".join(list(set(segmented_descriptions)))
+    
     matters, _, _ = caption_to_keywords(whole_image_description)
     _, actions, themes = caption_to_keywords(segmented_descriptions)
 
