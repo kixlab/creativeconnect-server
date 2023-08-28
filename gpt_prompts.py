@@ -5,50 +5,51 @@ openai.api_key = "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"
 
 def caption_to_keywords(description):
     response = openai.ChatCompletion.create(
-    model="gpt-4",
-    messages=[
-        {
-        "role": "system",
-        "content": "You will be provided with multiple sentences to describe an illustration. Your task is to extract a list of Subject matter, Action & pose, and Theme & mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one or two words.\n\nIf you are provided a sentences including some style such as cartoon, illustration, image, photo, exclude it. For other example, 'an illustration of a woman sitting at a table' caption is extracted to 'woman', 'table', 'sitting at a table', 'cozy'. The 'illustration' is not contained. \n\nEliminate the changed forms of the same word, such as plurals. Only include roots. For example of 'trees' and 'tree', only include 'tree'. "
-        },
-        {
-        "role": "user",
-        "content": "a card with chinese writing with colorful objects on it\na red and orange background with a blank paper, chinese, pencils, stationery and more\nan image of a classroom scene with various supplies"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: card, Chinese writing, colorful objects, red and orange background, blank paper, Chinese, pencils, stationery, classroom, supplies.\n\nAction & pose: \n\nTheme & mood: education, learning, multiculturalism."
-        },
-        {
-        "role": "user",
-        "content": "a man and a woman sitting at a table eating food\na woman sitting in a chair in a room with potted plants\na man sitting at a table eating a hot dog\na illustration of a woman sitting at a table in a kitchen with potted plants\nan illustration of a woman sitting at a table\nan illustration of a refrigerator next to a chair and a table\nan illustration of two people sitting at a table with their feet on a chair\na cartoon of a person sitting in a chair in a shower"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: man, woman, table, food, chair, potted plants, hot dog, kitchen, refrigerator, feet\n\nAction & pose: sitting at a table, eating food.\n\nTheme & mood: cozy, heartwarming"
-        },
-        {
-        "role": "user",
-        "content": "a painting of a white barn in a field of flowers\na painting of a blue house with a tree next to it\na painting of a blue house with a roof and trees\na painting of a window of a house with flowers\na painting of a field of flowers in front of a house"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: painting, white barn, field, flowers, blue house, tree, roof, window.\n\nAction & pose: \n\nTheme & mood: rural, peaceful, nature."
-        },
-        {
-        "role": "user",
-        "content": "the album cover of the beatles abbey road\na man and a woman standing in front of a car\na man and a woman walking down a street\na group of people walking across a crosswalk"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: Beatles, Abbey Road, man, woman, car, street, group, people, crosswalk.\n\nAction & pose: standing in front of a car, walking down a street, walking across a crosswalk.\n\nTheme & mood: urban, nostalgia."
-        }
-    ],
-    temperature=0.3,
-    max_tokens=256,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0
+        model="gpt-4",
+        messages=[
+            {
+                "role": "system",
+                "content": "You will be provided with multiple sentences to describe an illustration. Your task is to extract a list of Subject matter, Action & pose, and Theme & mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one or two words.\n\nIf you are provided a sentences including some style such as cartoon, illustration, image, photo, exclude it. For other example, 'an illustration of a woman sitting at a table' caption is extracted to 'woman', 'table', 'sitting at a table', 'cozy'. The 'illustration' is not contained. \n\nEliminate the changed forms of the same word, such as plurals. Only include roots. For example of 'trees' and 'tree', only include 'tree'. ",
+            },
+            {
+                "role": "user",
+                "content": "a card with chinese writing with colorful objects on it\na red and orange background with a blank paper, chinese, pencils, stationery and more\nan image of a classroom scene with various supplies",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: card, Chinese writing, colorful objects, red and orange background, blank paper, Chinese, pencils, stationery, classroom, supplies.\n\nAction & pose: \n\nTheme & mood: education, learning, multiculturalism.",
+            },
+            {
+                "role": "user",
+                "content": "a man and a woman sitting at a table eating food\na woman sitting in a chair in a room with potted plants\na man sitting at a table eating a hot dog\na illustration of a woman sitting at a table in a kitchen with potted plants\nan illustration of a woman sitting at a table\nan illustration of a refrigerator next to a chair and a table\nan illustration of two people sitting at a table with their feet on a chair\na cartoon of a person sitting in a chair in a shower",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: man, woman, table, food, chair, potted plants, hot dog, kitchen, refrigerator, feet\n\nAction & pose: sitting at a table, eating food.\n\nTheme & mood: cozy, heartwarming",
+            },
+            {
+                "role": "user",
+                "content": "a painting of a white barn in a field of flowers\na painting of a blue house with a tree next to it\na painting of a blue house with a roof and trees\na painting of a window of a house with flowers\na painting of a field of flowers in front of a house",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: painting, white barn, field, flowers, blue house, tree, roof, window.\n\nAction & pose: \n\nTheme & mood: rural, peaceful, nature.",
+            },
+            {
+                "role": "user",
+                "content": "the album cover of the beatles abbey road\na man and a woman standing in front of a car\na man and a woman walking down a street\na group of people walking across a crosswalk",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: Beatles, Abbey Road, man, woman, car, street, group, people, crosswalk.\n\nAction & pose: standing in front of a car, walking down a street, walking across a crosswalk.\n\nTheme & mood: urban, nostalgia.",
+            },
+            {"role": "user", "content": description},
+        ],
+        temperature=0.3,
+        max_tokens=256,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
     )
     res = response.choices[0].message.content
     matters = res.split("\n\n")[0].split(": ")[1].strip(".").split(", ")
@@ -60,66 +61,67 @@ def caption_to_keywords(description):
 
 def keywords_expansion(elementlist):
     response = openai.ChatCompletion.create(
-    model="gpt-4",
-    messages=[
-        {
-        "role": "system",
-        "content": "We are trying to support novice designers' ideation process by semantically combining different parts of references (illustrations). You will be provided with the topic of the ideation, and multiple keywords users like in the illustrations they found as references. There are three types of keywords: Subject matter, Action & Pose, and Theme & Mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\nCome up with more than four new keywords for Subject matter.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one-word.\n\nYour task is to expand on the keywords being given, by combining multiple keywords or looking for synonyms that can inspire new creations or ideas.\n\nFor example, the subject matter \"pencil\" can be combined with the action & pose \"traveling\" to inspire a new action & pose \"writing a diary\". \n\nYou can combine as many keywords at once. Another example is to generate \"hair salon\" from \"hair dryer\", \"comb\", and \"scissors\"\n\nFor combinations that result in theme & mood, make them as abstract as possible. An example is to make \"adventurous\", \"gusty\" from \"riding on ship\" and \"tent\"\n\nCome up with new keywords for each keyword type with creative combinations. Only use the original keywords provided for creating new keywords.\nDo not just paraphrasing original keywords. Do not suggest similar keywords with original ones. \n\nImportant: Include at least one subject matter for each combination. Subject matter and theme & mood should be a SINGLE WORD. Combinations among subject matters are highly recommended. New keywords should be 'surprising' compared to original ones. It means the character of your suggested word should has low similarity."
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: camping, tent, tree, animals, Eiffel tower, family\nAction & pose: riding on a bus, riding on a ship\nTheme & mood: playful, imaginative"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: bear, sleeping person, safari, cruise\nAction & pose: traveling, setting up camp, dancing jazz\nTheme & mood: adventurous, serene, joyful, romantic"
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: boy, dinosaur, flower\nAction & pose: watching television\nTheme & mood: fantasy, playful"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: wind mill, volcano, movie screen\nAction & pose: exploding strongly, riding a dinosaur, flying away to the sky\nTheme & mood: vast, whimsical, rustic, frenetic"
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: dreamy scene, boy\nAction & pose: playing with dino toys"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: universe, Saturn, astronauts\nAction & pose: imagining adventures, floating on the space, role-playing, daydreaming\nTheme & mood: jolly, imaginative, impactful"
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: Christmas tree\nAction & pose: dancing around the Christmas tree\nTheme & mood: family-bonding"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: Fireplace, wooden sled, Snowman, jazz, piano\nAction & pose: melting, giving , body-warming\nTheme & mood: jubilant, sparkling, heartwarming"
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: sea turtles, Christmas tree, marine life\nAction & pose: swimming, dancing around the Christmas tree\nTheme & mood: fantasy, underwater, family-bonding"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: Sea horse, Christmas lights, coral, mermaid\nAction & pose: floating on the wave, blinking eye, singing under the sea\nTheme & mood: ethereal, aquatic, charming, panoramic"
-        },
-        {
-        "role": "user",
-        "content": "Subject matter: kid, cat\nAction & pose: laying on top of a suitcase, playing hide and seek\nTheme & mood: Rustic, vivid, exhilarating"
-        },
-        {
-        "role": "assistant",
-        "content": "Subject matter: Birdcage, attic, trunk, blue bird\nAction & pose: jumping on boxes, chasing birds, hiding in a suitcase\nTheme & mood: quaint, mischievous, lively, nostalgic"
-        }
-    ],
-    temperature=1.2,
-    max_tokens=200,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0
+        model="gpt-4",
+        messages=[
+            {
+                "role": "system",
+                "content": 'We are trying to support novice designers\' ideation process by semantically combining different parts of references (illustrations). You will be provided with the topic of the ideation, and multiple keywords users like in the illustrations they found as references. There are three types of keywords: Subject matter, Action & Pose, and Theme & Mood.\n\nSubject matters are one-word, describing the specific physical objects, characters, or landscape that the user wants to include in their illustration. Example subject matters include pencil, children, or wave. \nFor subject matters, no adjectives should be included. They should always be a noun.\nCome up with more than four new keywords for Subject matter.\n\nActions & poses are word-level or phrase-level actions that the character or the object in the illustration performs. Example actions & poses include riding a bus, standing still, or traveling.\n\nThemes & moods are words not directly present in the illustration, but those that can potentially convey the overall theme or mood of the illustration. Example themes & moods include imaginative, eco-friendly, or sad. \nThey should be adverbs, preferably one-word.\n\nYour task is to expand on the keywords being given, by combining multiple keywords or looking for synonyms that can inspire new creations or ideas.\n\nFor example, the subject matter "pencil" can be combined with the action & pose "traveling" to inspire a new action & pose "writing a diary". \n\nYou can combine as many keywords at once. Another example is to generate "hair salon" from "hair dryer", "comb", and "scissors"\n\nFor combinations that result in theme & mood, make them as abstract as possible. An example is to make "adventurous", "gusty" from "riding on ship" and "tent"\n\nCome up with new keywords for each keyword type with creative combinations. Only use the original keywords provided for creating new keywords.\nDo not just paraphrasing original keywords. Do not suggest similar keywords with original ones. \n\nImportant: Include at least one subject matter for each combination. Subject matter and theme & mood should be a SINGLE WORD. Combinations among subject matters are highly recommended. New keywords should be \'surprising\' compared to original ones. It means the character of your suggested word should has low similarity.',
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: camping, tent, tree, animals, Eiffel tower, family\nAction & pose: riding on a bus, riding on a ship\nTheme & mood: playful, imaginative",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: bear, sleeping person, safari, cruise\nAction & pose: traveling, setting up camp, dancing jazz\nTheme & mood: adventurous, serene, joyful, romantic",
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: boy, dinosaur, flower\nAction & pose: watching television\nTheme & mood: fantasy, playful",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: wind mill, volcano, movie screen\nAction & pose: exploding strongly, riding a dinosaur, flying away to the sky\nTheme & mood: vast, whimsical, rustic, frenetic",
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: dreamy scene, boy\nAction & pose: playing with dino toys",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: universe, Saturn, astronauts\nAction & pose: imagining adventures, floating on the space, role-playing, daydreaming\nTheme & mood: jolly, imaginative, impactful",
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: Christmas tree\nAction & pose: dancing around the Christmas tree\nTheme & mood: family-bonding",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: Fireplace, wooden sled, Snowman, jazz, piano\nAction & pose: melting, giving , body-warming\nTheme & mood: jubilant, sparkling, heartwarming",
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: sea turtles, Christmas tree, marine life\nAction & pose: swimming, dancing around the Christmas tree\nTheme & mood: fantasy, underwater, family-bonding",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: Sea horse, Christmas lights, coral, mermaid\nAction & pose: floating on the wave, blinking eye, singing under the sea\nTheme & mood: ethereal, aquatic, charming, panoramic",
+            },
+            {
+                "role": "user",
+                "content": "Subject matter: kid, cat\nAction & pose: laying on top of a suitcase, playing hide and seek\nTheme & mood: Rustic, vivid, exhilarating",
+            },
+            {
+                "role": "assistant",
+                "content": "Subject matter: Birdcage, attic, trunk, blue bird\nAction & pose: jumping on boxes, chasing birds, hiding in a suitcase\nTheme & mood: quaint, mischievous, lively, nostalgic",
+            },
+            {"role": "user", "content": elementlist},
+        ],
+        temperature=1.2,
+        max_tokens=200,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
     )
     res = []
     response_content = response.choices[0].message.content
