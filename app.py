@@ -259,7 +259,7 @@ def extract_element_from_image():
         segmented_descriptions.append(generated_text)
 
     segmented_descriptions = "\n".join(list(set(segmented_descriptions)))
-    
+
     matters, _, _ = caption_to_keywords(whole_image_description)
     _, actions, themes = caption_to_keywords(segmented_descriptions)
 
