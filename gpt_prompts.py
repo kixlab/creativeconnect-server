@@ -1,6 +1,6 @@
 import openai, ast
 
-openai.api_key = "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"
+openai.api_key = "Enter your API code here"
 
 
 def caption_to_keywords(description):
